@@ -61,16 +61,22 @@ def run_script():
             "Website",                          # Lead Source
             form_entry.get("First Name", ""),
             form_entry.get("Last Name", ""),
-            "",                                 # Email Sent-Date
-            "",                                 # Reply Status
-            form_entry.get("Business Name", ""),
-            "",                                 # Designation
-            "Speaker_opportunity",
-            "",                                 # Comments
-            "",                                 # Next Followup
-            form_entry.get("Mobile Number", ""),
-            form_entry.get("Email", ""),
-            form_entry.get("Select Location Of Interest", "")
+            form_entry.get("Business Name", ""), # Company Name (E)
+            form_entry.get("Mobile Number", ""), # Mobile (F)
+            form_entry.get("Email", ""),         # Email (G)
+            form_entry.get("Select Location Of Interest", ""),  # Show (H)
+            "",                                  # Next Followup (I)
+            "",                                  # Call Attempt (J)
+            "",                                  # WhatsApp msg count (K)
+            "",                                  # Linkedin Msg Count (L)
+            "",                                  # Comments (M)
+            "",                                  # Pitch Deck URL (N)
+            "Speaker_opportunity",               # Interested In? (O)
+            "",                                  # Email Sent-Date (P)
+            "",                                  # Reply Status (Q)
+            "",                                  # Designation (R)
+            "",                                  # Company Linkedin Page (S)
+            ""                                   # Personal Linkedin Page (T)
         ]
 
         new_leads.append(row)
