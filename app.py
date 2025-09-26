@@ -18,7 +18,7 @@ def run_script():
 
     # --- Step 1: Get existing emails from column M (13th column) ---
     print("📦 Fetching existing emails from sheet...", flush=True)
-    existing_emails = set(email.strip().lower() for email in sheet.col_values(13)[1:])  # Skip header
+    existing_emails = set(email.strip().lower() for email in sheet.col_values(7)[1:])  # Skip header
 
     # --- Step 2: Fetch data from protected API ---
     print("🌐 Fetching leads from API...", flush=True)
