@@ -67,8 +67,10 @@ def run_script():
             form_entry.get("Select Location Of Interest", ""),  # Show (H)
             "",                                  # Next Followup (I)
             "",                                  # Call Attempt (J)
+            "",                                  #Email-count
             "",                                  # WhatsApp msg count (K)
             "",                                  # Linkedin Msg Count (L)
+            "",                                  #Meeting-Booked
             "",                                  # Comments (M)
             "",                                  # Pitch Deck URL (N)
             "Speaker_opportunity",               # Interested In? (O)
