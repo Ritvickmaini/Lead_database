@@ -88,12 +88,11 @@ def run_script():
 
     if new_leads:
         for lead in reversed(new_leads):  # Insert from last to first to keep top-order correct
-            sheet.insert_row(lead, index=2, value_input_option="USER_ENTERED")
+            sheet.insert_row(lead, index=2, value_input_option="USER_ENTERED", inherit_from_before=False)
             sheet.format("A2:Z2", {"backgroundColor": {"red": 1, "green": 1, "blue": 1}})
         print(f"✅ Inserted {len(new_leads)} leads at row 2 (below header).", flush=True)
     else:
         print("🔁 No new leads to add.", flush=True)
-
 
 # --- Repeat every 2 hours ---
 while True:
