@@ -97,7 +97,8 @@ def run_script():
     print(f"🧾 Found {len(new_leads)} new unique leads to insert.", flush=True)
 
     if new_leads:
-        sheet.insert_rows(new_leads[::-1],row=2,value_input_option="USER_ENTERED",inherit_from_before=False)
+        for row in reversed(new_rows):
+            sheet.insert_row(row, 2, value_input_option="USER_ENTERED", inherit_from_before=False )
         print(f"✅ Inserted {len(new_leads)} leads at row 2 (below header).", flush=True)
     else:
         print("🔁 No new leads to add.", flush=True)
