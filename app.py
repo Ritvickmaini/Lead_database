@@ -36,7 +36,13 @@ def run_script():
     new_leads = []
 
     for item in entries:
+
+        if not isinstance(item, dict):
+            print(f"⚠️ Skipping invalid item (not dict): {item}")
+            continue
+        
         form_entry = item.get("Form_Entry", {})
+        
         if not isinstance(form_entry, dict):
             print(f"⚠️ Skipping invalid Form_Entry (not dict): {form_entry}")
             continue
@@ -91,9 +97,7 @@ def run_script():
     print(f"🧾 Found {len(new_leads)} new unique leads to insert.", flush=True)
 
     if new_leads:
-        for lead in reversed(new_leads):  # Insert from last to first to keep top-order correct
-            sheet.insert_row(lead, index=2, value_input_option="USER_ENTERED", inherit_from_before=False)
-            sheet.format("A2:Z2", {"backgroundColor": {"red": 1, "green": 1, "blue": 1}})
+        sheet.insert_rows(new_leads[::-1],row=2,value_input_option="USER_ENTERED",inherit_from_before=False)
         print(f"✅ Inserted {len(new_leads)} leads at row 2 (below header).", flush=True)
     else:
         print("🔁 No new leads to add.", flush=True)
