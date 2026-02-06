@@ -37,7 +37,11 @@ def run_script():
 
     for item in entries:
         form_entry = item.get("Form_Entry", {})
-        email = form_entry.get("Email", "").strip().lower()
+        if not isinstance(form_entry, dict):
+            print(f"⚠️ Skipping invalid Form_Entry (not dict): {form_entry}")
+            continue
+            
+        email = form_entry.get("Email", "")
 
         if not email or email in existing_emails:
             continue
