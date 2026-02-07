@@ -7,109 +7,112 @@ import time
 # --- Google Sheets Setup ---
 SHEET_NAME = "Expo-Sales-Management"
 SHEET_TAB = "speakers-2"
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+SCOPES = [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive"
+]
 CREDS_FILE = "/etc/secrets/service_account.json"
 
+API_URL = "https://b2bgrowthexpo.com/wp-json/custom-api/v1/protected/speaker-form-data"
+API_TOKEN = "Bearer e3e6836eb425245556aebc1e0a9e5bfbb41ee9c81ec5db1bc121debc5907fd85"
+
 def run_script():
-    print("🔧 Setting up Google Sheets access...", flush=True)
+    print("🔧 Connecting to Google Sheets...", flush=True)
     creds = Credentials.from_service_account_file(CREDS_FILE, scopes=SCOPES)
     gc = gspread.authorize(creds)
     sheet = gc.open(SHEET_NAME).worksheet(SHEET_TAB)
 
-    # --- Step 1: Get existing emails from column M (13th column) ---
-    print("📦 Fetching existing emails from sheet...", flush=True)
-    existing_emails = set(email.strip().lower() for email in sheet.col_values(7)[1:])  # Skip header
-
-    # --- Step 2: Fetch data from protected API ---
-    print("🌐 Fetching leads from API...", flush=True)
-    url = "https://b2bgrowthexpo.com/wp-json/custom-api/v1/protected/speaker-form-data"
-    headers = {
-        "Authorization": "Bearer e3e6836eb425245556aebc1e0a9e5bfbb41ee9c81ec5db1bc121debc5907fd85"
+    # --- Existing emails (Column G) ---
+    existing_emails = {
+        e.strip().lower()
+        for e in sheet.col_values(7)[1:]
+        if e.strip()
     }
 
-    response = requests.get(url, headers=headers)
-    form_data = response.json()
-    entries = form_data.get("data", [])
+    print(f"📦 Existing emails: {len(existing_emails)}", flush=True)
 
-    print(f"📥 Received {len(entries)} entries from API.", flush=True)
+    # --- Fetch API data ---
+    headers = {"Authorization": API_TOKEN}
+    response = requests.get(API_URL, headers=headers)
+    response.raise_for_status()
+
+    entries = response.json().get("data", [])
+    print(f"📥 API entries received: {len(entries)}", flush=True)
 
     new_leads = []
 
     for item in entries:
-
         if not isinstance(item, dict):
-            print(f"⚠️ Skipping invalid item (not dict): {item}")
             continue
-        
-        form_entry = item.get("Form_Entry", {})
-        
-        if not isinstance(form_entry, dict):
-            print(f"⚠️ Skipping invalid Form_Entry (not dict): {form_entry}")
-            continue
-            
-        email = form_entry.get("Email", "")
 
+        form_entry = item.get("Form_Entry", {})
+        if not isinstance(form_entry, dict):
+            continue
+
+        email = form_entry.get("Email", "").strip().lower()
         if not email or email in existing_emails:
             continue
 
-        # Extract and format date
-        form_date_raw = item.get("form_date", "")
+        # --- Parse date ---
         form_date = ""
-        parsed_form_date = None
-        if form_date_raw:
-            try:
-                parsed_form_date = datetime.strptime(form_date_raw, "%Y-%m-%d %H:%M:%S")
-                if parsed_form_date < datetime(2025, 7, 8):
-                    continue
-                form_date = parsed_form_date.strftime("%d/%m/%Y")
-            except:
-                continue
+        raw_date = item.get("form_date")
+        try:
+            parsed_date = datetime.strptime(raw_date, "%Y-%m-%d %H:%M:%S")
+            form_date = parsed_date.strftime("%d/%m/%Y")
+        except Exception:
+            continue
 
-        # Prepare row data
         row = [
-            form_date,                          # Lead Date
-            "Website",                          # Lead Source
-            form_entry.get("First Name", ""),
-            form_entry.get("Last Name", ""),
-            form_entry.get("Business Name", ""), # Company Name (E)
-            form_entry.get("Mobile Number", ""), # Mobile (F)
-            form_entry.get("Email", ""),         # Email (G)
-            form_entry.get("Select Location Of Interest", ""),  # Show (H)
-            "",                                  # Next Followup (I)
-            "",                                  # Call Attempt (J)
-            "",                                  #Email-count
-            "",                                  # WhatsApp msg count (K)
-            "",                                  # Linkedin Msg Count (L)
-            "",                                  #Meeting-Booked
-            "",                                  # Comments (M)
-            "",                                  # Pitch Deck URL (N)
-            "Speaker_opportunity",               # Interested In? (O)
-            "",                                  # Email Sent-Date (P)
-            "",                                  # Reply Status (Q)
-            "",                                  # Designation (R)
-            "",                                  # Company Linkedin Page (S)
-            ""                                   # Personal Linkedin Page (T)
+            form_date,                                        # A Lead Date
+            "Website",                                        # B Lead Source
+            form_entry.get("First Name", ""),                 # C
+            form_entry.get("Last Name", ""),                  # D
+            form_entry.get("Business Name", ""),              # E Company
+            form_entry.get("Mobile Number", ""),              # F Mobile
+            email,                                            # G Email
+            form_entry.get("Select Location Of Interest", ""),# H Show
+            "",                                               # I Next Followup
+            "",                                               # J Call Attempt
+            "",                                               # K Email Count
+            "",                                               # L WhatsApp Count
+            "",                                               # M LinkedIn Msg Count
+            "",                                               # N Meeting Booked
+            "",                                               # O Comments
+            "",                                               # P Pitch Deck
+            "Speaker_opportunity",                             # Q Interested In
+            "",                                               # R Email Sent Date
+            "",                                               # S Reply Status
+            "",                                               # T Designation
+            form_entry.get(
+                "Business Linkedln Page Or Website", ""
+            ),                                                # U Company LinkedIn
+            form_entry.get("LinkedIn ProfileLink", "")        # V Personal LinkedIn
         ]
 
         new_leads.append(row)
         existing_emails.add(email)
 
-    print(f"🧾 Found {len(new_leads)} new unique leads to insert.", flush=True)
+    print(f"🧾 New leads to insert: {len(new_leads)}", flush=True)
 
     if new_leads:
-        for row in reversed(new_rows):
-            sheet.insert_row(row, 2, value_input_option="USER_ENTERED", inherit_from_before=False )
-        print(f"✅ Inserted {len(new_leads)} leads at row 2 (below header).", flush=True)
+        for row in reversed(new_leads):
+            sheet.insert_row(
+                row,
+                index=2,
+                value_input_option="USER_ENTERED",
+                inherit_from_before=False
+            )
+        print("✅ Leads inserted successfully", flush=True)
     else:
-        print("🔁 No new leads to add.", flush=True)
+        print("🔁 No new leads found", flush=True)
 
-# --- Repeat every 2 hours ---
+# --- Run every 2 hours ---
 while True:
     try:
-        print("\n🔄 Starting new sync run...", flush=True)
+        print("\n🔄 Sync started...", flush=True)
         run_script()
     except Exception as e:
-        print(f"❌ Error during execution: {e}", flush=True)
-    
-    print("⏸ Sleeping for 2 hours (7200 seconds)...", flush=True)
+        print(f"❌ Error: {e}", flush=True)
+
+    print("⏸ Sleeping for 2 hours...", flush=True)
     time.sleep(7200)
