@@ -22,10 +22,10 @@ def run_script():
     gc = gspread.authorize(creds)
     sheet = gc.open(SHEET_NAME).worksheet(SHEET_TAB)
 
-    # --- Existing emails (Column G) ---
+    # --- Existing emails (Column H) ---
     existing_emails = {
         e.strip().lower()
-        for e in sheet.col_values(7)[1:]
+        for e in sheet.col_values(8)[1:]
         if e.strip()
     }
 
@@ -63,6 +63,7 @@ def run_script():
             continue
 
         row = [
+            "",
             form_date,                                        # A Lead Date
             "Website",                                        # B Lead Source
             form_entry.get("First Name", ""),                 # C
